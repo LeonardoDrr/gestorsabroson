@@ -1,49 +1,72 @@
-# Gestor de Avance 🎯
+# Gestor de Avance - Pro
 
-Aplicación web para gestionar proyectos con tareas recursivas y seguimiento de progreso en tiempo real.
+Sistema avanzado de gestión de tareas con prioridades, múltiples proyectos y búsqueda inteligente.
 
-## Características
+## ✨ Características
 
-- ✅ **Tareas Recursivas**: Crea subtareas dentro de subtareas sin límite
-- 📊 **Barra de Progreso**: Visualización del porcentaje de completitud
-- 🔄 **Sincronización en Tiempo Real**: Usa Firebase Firestore
-- 🌙 **Tema Oscuro**: Diseño moderno y agradable
-- ⌨️ **Atajos de Teclado**: Presiona Enter para agregar tareas rápido
+### 🎯 Gestión de Tareas
+- **Tareas jerárquicas ilimitadas**: Crea tareas y subtareas sin límite de profundidad
+- **Sistema de prioridades**: 🔴 Alta, 🔵 Media (por defecto), 🟡 Baja
+- **Completado automático**: Las tareas padre se completan cuando todas sus subtareas están listas
+- **Notas descriptivas**: Agrega descripciones detalladas a cada tarea
 
-## Cómo Usar
+### 📁 Múltiples Proyectos
+- **Gestión de proyectos**: Crea, edita y elimina proyectos independientes
+- **Cambio rápido**: Selector dropdown para cambiar entre proyectos
+- **Persistencia**: El proyecto activo se mantiene al recargar
 
-1. Abre `index.html` en tu navegador
-2. Escribe una tarea principal y presiona **Enter** o clic en **+ Agregar**
-3. Haz clic en el botón **+** junto a cualquier tarea para agregar subtareas
-4. Marca las tareas completadas con el checkbox verde
-5. Edita cualquier texto haciendo clic sobre él
+### 🔍 Búsqueda y Filtros
+- **Búsqueda en tiempo real**: Encuentra tareas por nombre o notas
+- **Ordenar por prioridad**: Organiza tareas automáticamente (Alta → Media → Baja)
+- **Búsqueda recursiva**: Busca en toda la jerarquía de tareas
 
-## Configuración de Firebase
+### 💾 Guardado Inteligente
+- **Manual**: Botón "Guardar" para sincronizar cuando desees
+- **Auto-guardado**: Guardado automático después de 60s sin cambios
+- **Indicador visual**: Punto de color que muestra el estado (🟡 sin guardar, 🟢 guardado)
+- **Prevención de pérdida**: Alerta si intentas cerrar con cambios sin guardar
 
-Si necesitas usar tu propia base de datos:
+### 📊 Interfaz Moderna
+- **Diseño oscuro**: Tema oscuro optimizado para largas sesiones
+- **Progreso visual**: Barra de progreso total del proyecto
+- **Animaciones suaves**: Transiciones fluidas y micro-interacciones
+- **Estado expandido**: Las tareas mantienen su estado expandido/colapsado
 
-1. Ve a [Firebase Console](https://console.firebase.google.com)
-2. Crea un nuevo proyecto
-3. Habilita Firestore Database
-4. Configura las reglas (ver `INSTRUCCIONES_FIREBASE.md`)
-5. Reemplaza la configuración en `index.html` (línea ~326)
+## 🚀 Uso
 
-## Estructura
+1. **Abre** `index.html` en tu navegador
+2. **Crea proyectos** desde el selector en la esquina superior izquierda
+3. **Agrega tareas** escribiendo en el campo inferior y presionando Enter
+4. **Cambia prioridades** haciendo clic en el badge de color
+5. **Agrega notas** desde el menú de opciones (3 puntos)
+6. **Busca** usando la barra de búsqueda
+7. **Ordena** con el botón "Prioridad"
+8. **Guarda** manualmente o espera el auto-guardado
+
+## 🔧 Configuración de Firebase
+
+El proyecto utiliza Firebase Firestore para persistencia en tiempo real:
+
+1. Crea un proyecto en [Firebase Console](https://console.firebase.google.com/)
+2. Habilita Firestore Database
+3. Actualiza las credenciales en `index.html` (líneas 336-342)
+4. Configura las reglas de seguridad según tus necesidades
+
+## 📂 Estructura de Archivos
 
 ```
 gestor-de-avance/
-├── index.html              # Archivo principal (todo incluido)
-├── README.md              # Este archivo
-└── INSTRUCCIONES_FIREBASE.md  # Guía de configuración
+├── index.html              # Aplicación principal (todo-en-uno)
+├── README.md               # Este archivo
+├── COMO_PUBLICAR.md       # Guía de publicación en GitHub Pages
+├── FUNCIONALIDADES_SUGERIDAS.md  # Ideas para futuras mejoras
+└── .gitignore             # Archivos ignorados por Git
 ```
 
-## Tecnologías
+## 🌐 Publicar en GitHub Pages
 
-- HTML5 + CSS3
-- JavaScript Vanilla (ES6+)
-- Firebase Firestore (CDN)
-- Remix Icon
+Sigue las instrucciones en `COMO_PUBLICAR.md` para desplegar tu aplicación.
 
-## Licencia
+## 📝 Licencia
 
-MIT
+MIT License - Siéntete libre de usar y modificar.
