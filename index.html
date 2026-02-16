@@ -303,7 +303,14 @@
 
     <div id="app">
         <header>
-            <h1 id="project-title" contenteditable="true" spellcheck="false">Cargando...</h1>
+            <div style="display: flex; align-items: center; gap: 15px;">
+                <h1 id="project-title" contenteditable="true" spellcheck="false">Cargando...</h1>
+                <button id="btn-save" class="btn-save" title="Guardar cambios">
+                    <i class="ri-save-line"></i>
+                    <span>Guardar</span>
+                </button>
+                <span id="save-status" class="save-status">●</span>
+            </div>
             <div class="header-stats">
                 <span>Progreso Total</span>
                 <div class="main-progress-container">
@@ -357,6 +364,8 @@
         let projectData = null;
         let debounceTimer;
         let expandedTasks = new Set(); // Track which tasks are expanded
+        let hasUnsavedChanges = false; // Track if there are unsaved changes
+        let autoSaveTimer = null; // Auto-save timer reference
 
         // --- 3. DOM ELEMENTS ---
         const taskContainer = document.getElementById('task-container');
@@ -365,6 +374,69 @@
         const mainProgressText = document.getElementById('main-progress-text');
         const inputRoot = document.getElementById('new-root-task');
         const btnAddRoot = document.getElementById('btn-add-root');
+        const btnSave = document.getElementById('btn-save');
+        const saveStatus = document.getElementById('save-status');
+
+        // --- 4. SAVE STATE MANAGEMENT ---
+
+        function markAsUnsaved() {
+            hasUnsavedChanges = true;
+            saveStatus.className = 'save-status unsaved';
+            saveStatus.title = 'Cambios sin guardar';
+
+            // Reset auto-save timer (60 seconds)
+            clearTimeout(autoSaveTimer);
+            autoSaveTimer = setTimeout(() => {
+                console.log("⏰ Auto-guardado después de 60s de inactividad");
+                manualSave();
+            }, 60000); // 60 seconds
+        }
+
+        function markAsSaved() {
+            hasUnsavedChanges = false;
+            saveStatus.className = 'save-status saved';
+            saveStatus.title = 'Todo guardado';
+            clearTimeout(autoSaveTimer);
+        }
+
+        function markAsSaving() {
+            saveStatus.className = 'save-status saving';
+            saveStatus.title = 'Guardando...';
+        }
+
+        // Manual save function
+        async function manualSave() {
+            if (!hasUnsavedChanges || !projectData) {
+                console.log("📌 No hay cambios para guardar");
+                return;
+            }
+
+            markAsSaving();
+            console.log("💾 Guardado manual iniciado");
+
+            try {
+                await db.collection("projects").doc(PROJECT_ID).update({
+                    tasks: projectData.tasks,
+                    title: projectData.title || "Mi Proyecto"
+                });
+                console.log("✅ Guardado exitoso");
+                markAsSaved();
+                showStatus("Guardado correctamente", "success");
+            } catch (e) {
+                console.error("❌ Error guardando:", e);
+                showStatus("Error al guardar: " + e.message, "error");
+                markAsUnsaved(); // Restore unsaved state
+            }
+        }
+
+        // Confirm before leaving if unsaved changes
+        window.addEventListener('beforeunload', (e) => {
+            if (hasUnsavedChanges) {
+                e.preventDefault();
+                e.returnValue = ''; // Chrome requires this
+                return ''; // Some browsers show this message
+            }
+        });
 
         // --- 4. LOGIC ---
 
@@ -526,33 +598,16 @@
 
         // --- 6. DATA SYNC ---
 
-        // Debounced Firebase sync to batch rapid changes
-        const debouncedFirebaseUpdate = debounce((tasks) => {
-            console.log("  📤 Intentando guardar en Firebase...");
-            db.collection("projects").doc(PROJECT_ID).update({ tasks: tasks })
-                .then(() => {
-                    console.log("  ✅ Guardado exitoso en Firebase");
-                })
-                .catch(e => {
-                    console.error("  ❌ Error guardando en Firebase:", e);
-                    showStatus("Error guardando: " + e.message, "error");
-                });
-        }, 1000); // Wait 1s after last change before syncing
-
         function save(updaterFn, silent = false) {
-            console.log("💾 save() llamado");
-            console.log("  - projectData:", projectData);
-            console.log("  - projectData.tasks antes:", projectData.tasks);
+            console.log("💾 save() llamado (solo local)");
             const newTasks = updaterFn(projectData.tasks);
-            console.log("  - newTasks después:", newTasks);
+            projectData.tasks = newTasks;
+
             if (!silent) {
-                projectData.tasks = newTasks;
-                console.log("  ✓ Estado local actualizado");
                 render();
-                console.log("  ✓ UI re-renderizada");
             }
-            // Debounced sync instead of immediate
-            debouncedFirebaseUpdate(newTasks);
+
+            markAsUnsaved(); // Mark that we have unsaved changes
         }
 
         showStatus("Conectando...", "info");
@@ -562,6 +617,7 @@
                 projectData = data;
                 if (document.activeElement !== projectTitle) projectTitle.textContent = data.title;
                 render();
+                markAsSaved(); // Data loaded from Firebase is already saved
                 showStatus("Sincronizado", "success");
             } else {
                 showStatus("Creando proyecto...", "info");
