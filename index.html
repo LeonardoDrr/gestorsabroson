@@ -356,6 +356,7 @@
         const PROJECT_ID = "vanilla-project-v1";
         let projectData = null;
         let debounceTimer;
+        let expandedTasks = new Set(); // Track which tasks are expanded
 
         // --- 3. DOM ELEMENTS ---
         const taskContainer = document.getElementById('task-container');
@@ -470,15 +471,29 @@
             const subContainer = el.querySelector('.subtasks-container');
             if (hasSub) {
                 task.subtasks.forEach(sub => subContainer.appendChild(createTaskEl(sub)));
+
+                // Restore expanded state if it was open before
+                if (expandedTasks.has(task.id)) {
+                    subContainer.classList.add('open');
+                    btnToggle.classList.add('expanded');
+                    btnToggle.querySelector('i').className = 'ri-arrow-down-s-line';
+                }
             }
 
             // Events
             const btnToggle = el.querySelector('.btn-toggle');
             if (hasSub) {
                 btnToggle.onclick = () => {
-                    subContainer.classList.toggle('open');
+                    const isOpen = subContainer.classList.toggle('open');
                     btnToggle.classList.toggle('expanded');
-                    btnToggle.querySelector('i').className = subContainer.classList.contains('open') ? 'ri-arrow-down-s-line' : 'ri-arrow-right-s-line';
+                    btnToggle.querySelector('i').className = isOpen ? 'ri-arrow-down-s-line' : 'ri-arrow-right-s-line';
+
+                    // Save state
+                    if (isOpen) {
+                        expandedTasks.add(task.id);
+                    } else {
+                        expandedTasks.delete(task.id);
+                    }
                 };
             }
 
@@ -504,13 +519,25 @@
             titleSpan.oninput = debounce(() => {
                 const val = titleSpan.innerText;
                 if (val !== task.title) save(tasks => updateTaskRecursive(tasks, task.id, t => ({ ...t, title: val })), true);
-            }, 500);
+            }, 1500); // Increased debounce to 1.5s
 
             return el;
         }
-    }
 
         // --- 6. DATA SYNC ---
+
+        // Debounced Firebase sync to batch rapid changes
+        const debouncedFirebaseUpdate = debounce((tasks) => {
+            console.log("  📤 Intentando guardar en Firebase...");
+            db.collection("projects").doc(PROJECT_ID).update({ tasks: tasks })
+                .then(() => {
+                    console.log("  ✅ Guardado exitoso en Firebase");
+                })
+                .catch(e => {
+                    console.error("  ❌ Error guardando en Firebase:", e);
+                    showStatus("Error guardando: " + e.message, "error");
+                });
+        }, 1000); // Wait 1s after last change before syncing
 
         function save(updaterFn, silent = false) {
             console.log("💾 save() llamado");
@@ -524,15 +551,8 @@
                 render();
                 console.log("  ✓ UI re-renderizada");
             }
-            console.log("  📤 Intentando guardar en Firebase...");
-            db.collection("projects").doc(PROJECT_ID).update({ tasks: newTasks })
-                .then(() => {
-                    console.log("  ✅ Guardado exitoso en Firebase");
-                })
-                .catch(e => {
-                    console.error("  ❌ Error guardando en Firebase:", e);
-                    showStatus("Error guardando: " + e.message, "error");
-                });
+            // Debounced sync instead of immediate
+            debouncedFirebaseUpdate(newTasks);
         }
 
         showStatus("Conectando...", "info");
