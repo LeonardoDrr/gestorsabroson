@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestor de Avance - Final</title>
+    <title>Gestor de Avance - Pro</title>
     <!-- Fonts & Icons -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
@@ -23,6 +23,9 @@
             --success-color: #22c55e;
             --border-color: #334155;
             --font-family: 'Inter', sans-serif;
+            --priority-high: #ef4444;
+            --priority-medium: #3b82f6;
+            --priority-low: #eab308;
         }
 
         * {
@@ -44,26 +47,38 @@
 
         #app {
             width: 100%;
-            max-width: 800px;
+            max-width: 900px;
             display: flex;
             flex-direction: column;
             gap: 20px;
-            opacity: 0;
-            animation: fadeIn 0.5s forwards;
         }
 
-        /* Status Bar */
+        /* Status Message */
         #status-message {
-            padding: 12px;
-            border-radius: 8px;
-            text-align: center;
-            font-weight: 600;
             display: none;
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-weight: 500;
+            z-index: 1000;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(400px);
+            }
+
+            to {
+                transform: translateX(0);
+            }
         }
 
         #status-message.error {
             display: block;
-            background: #fee2e2;
+            background: #fef2f2;
             color: #991b1b;
             border: 1px solid #f87171;
         }
@@ -83,12 +98,124 @@
         }
 
         /* Header */
+        header {
+            background: linear-gradient(135deg, var(--card-bg) 0%, #1a2744 100%);
+            padding: 24px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+        }
+
+        .header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        /* Project Selector */
+        .project-selector {
+            position: relative;
+        }
+
+        .project-btn {
+            background: var(--card-bg);
+            color: var(--text-primary);
+            padding: 8px 12px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+
+        .project-btn:hover {
+            background: var(--card-hover);
+        }
+
+        .project-dropdown {
+            display: none;
+            position: absolute;
+            top: 110%;
+            left: 0;
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            min-width: 200px;
+            max-height: 300px;
+            overflow-y: auto;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4);
+            z-index: 100;
+        }
+
+        .project-dropdown.show {
+            display: block;
+        }
+
+        .project-item {
+            padding: 10px 12px;
+            cursor: pointer;
+            transition: background 0.2s;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .project-item:hover {
+            background: var(--card-hover);
+        }
+
+        .project-item.active {
+            background: var(--accent-color);
+            color: white;
+        }
+
+        .project-item-actions {
+            display: flex;
+            gap: 4px;
+        }
+
+        .project-item-actions button {
+            background: none;
+            border: none;
+            color: inherit;
+            cursor: pointer;
+            padding: 2px;
+            opacity: 0.7;
+        }
+
+        .project-item-actions button:hover {
+            opacity: 1;
+        }
+
+        .project-add {
+            padding: 10px 12px;
+            background: var(--accent-color);
+            color: white;
+            text-align: center;
+            cursor: pointer;
+            border-top: 1px solid var(--border-color);
+            font-weight: 600;
+        }
+
+        .project-add:hover {
+            background: var(--accent-hover);
+        }
+
         h1#project-title {
             font-size: 2rem;
             font-weight: 700;
-            margin-bottom: 15px;
             background: linear-gradient(to right, #60a5fa, #34d399);
             -webkit-background-clip: text;
+            background-clip: text;
             -webkit-text-fill-color: transparent;
             border-bottom: 2px solid transparent;
         }
@@ -98,100 +225,242 @@
             outline: none;
         }
 
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .btn-save {
+            background: var(--accent-color);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s;
+            border: none;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+
+        .btn-save:hover {
+            background: var(--accent-hover);
+            transform: translateY(-1px);
+        }
+
+        .save-status {
+            font-size: 1.5rem;
+            transition: color 0.3s;
+        }
+
+        .save-status.saved {
+            color: var(--success-color);
+        }
+
+        .save-status.unsaved {
+            color: #fbbf24;
+            animation: pulse 2s infinite;
+        }
+
+        .save-status.saving {
+            color: var(--accent-color);
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.5;
+            }
+        }
+
+        @keyframes spin {
+            from {
+                transform: rotate(0deg);
+            }
+
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
         .header-stats {
-            background: var(--card-bg);
-            padding: 15px;
-            border-radius: 12px;
             display: flex;
             align-items: center;
             gap: 15px;
-            border: 1px solid var(--border-color);
+            font-size: 0.9rem;
+            margin-bottom: 15px;
         }
 
         .main-progress-container {
             flex: 1;
-            height: 12px;
-            background: #0f172a;
-            border-radius: 6px;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
             overflow: hidden;
         }
 
         .progress-fill {
             height: 100%;
+            background: linear-gradient(to right, var(--accent-color), var(--success-color));
+            transition: width 0.3s;
+        }
+
+        /* Search Bar */
+        .search-container {
+            display: flex;
+            gap: 10px;
+        }
+
+        .search-bar {
+            flex: 1;
+            padding: 10px 12px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            background: var(--card-bg);
+            color: white;
+            outline: none;
+        }
+
+        .search-bar:focus {
+            border-color: var(--accent-color);
+        }
+
+        .filter-btn {
+            background: var(--card-bg);
+            color: var(--text-primary);
+            padding: 10px 16px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s;
+        }
+
+        .filter-btn:hover {
+            background: var(--card-hover);
+        }
+
+        .filter-btn.active {
             background: var(--accent-color);
-            transition: width 0.5s ease;
+            color: white;
+            border-color: var(--accent-color);
         }
 
-        #main-progress-text {
-            color: var(--accent-color);
-            font-weight: bold;
-            font-family: monospace;
+        /* Tasks Container */
+        #task-container {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
         }
 
-        /* Tasks */
         .task-item {
-            margin-bottom: 10px;
-            animation: slideIn 0.3s ease;
+            animation: fadeIn 0.3s;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         .task-content {
             background: var(--card-bg);
-            padding: 12px;
+            padding: 14px;
             border-radius: 8px;
             display: flex;
             align-items: center;
             gap: 10px;
-            border: 1px solid transparent;
-            transition: all 0.2s;
+            transition: background 0.2s;
+            border-left: 3px solid transparent;
         }
 
         .task-content:hover {
-            border-color: var(--border-color);
             background: var(--card-hover);
+        }
+
+        .task-content:hover .task-actions {
+            opacity: 1;
         }
 
         .task-content.completed .task-title {
             text-decoration: line-through;
-            color: var(--text-secondary);
+            opacity: 0.6;
         }
 
-        .task-title {
-            flex: 1;
-            outline: none;
-            padding: 4px;
+        /* Priority Badges */
+        .priority-badge {
+            padding: 4px 8px;
             border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            transition: all 0.2s;
+            user-select: none;
         }
 
-        .task-title:focus {
-            background: rgba(0, 0, 0, 0.2);
+        .priority-badge:hover {
+            transform: scale(1.05);
+        }
+
+        .priority-high {
+            background: var(--priority-high);
+            color: white;
+        }
+
+        .priority-medium {
+            background: var(--priority-medium);
+            color: white;
+        }
+
+        .priority-low {
+            background: var(--priority-low);
+            color: white;
         }
 
         /* Buttons */
         button {
             background: none;
             border: none;
-            cursor: pointer;
             color: var(--text-secondary);
-            transition: color 0.2s;
+            cursor: pointer;
+            padding: 6px;
+            border-radius: 4px;
+            transition: all 0.2s;
             display: flex;
             align-items: center;
             justify-content: center;
         }
 
         button:hover {
-            color: var(--text-primary);
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
         }
 
         .btn-check {
             width: 24px;
             height: 24px;
-            border: 2px solid var(--text-secondary);
             border-radius: 50%;
-            color: transparent;
-        }
-
-        .btn-check:hover {
-            border-color: var(--text-primary);
+            border: 2px solid var(--border-color);
         }
 
         .btn-check.checked {
@@ -221,10 +490,45 @@
             opacity: 0;
             display: flex;
             gap: 8px;
+            margin-left: auto;
         }
 
-        .task-content:hover .task-actions {
-            opacity: 1;
+        .task-title {
+            flex: 1;
+            outline: none;
+            border: none;
+            background: transparent;
+            color: var(--text-primary);
+            font-size: 1rem;
+        }
+
+        /* Notes Section */
+        .task-notes {
+            margin-top: 10px;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 6px;
+            display: none;
+        }
+
+        .task-notes.show {
+            display: block;
+        }
+
+        .task-notes textarea {
+            width: 100%;
+            min-height: 60px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            padding: 8px;
+            color: var(--text-primary);
+            resize: vertical;
+            outline: none;
+        }
+
+        .task-notes textarea:focus {
+            border-color: var(--accent-color);
         }
 
         /* Subtasks */
@@ -273,26 +577,44 @@
             background: var(--accent-hover);
         }
 
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-            }
-
-            to {
-                opacity: 1;
-            }
+        /* Options Menu */
+        .task-menu {
+            position: relative;
         }
 
-        @keyframes slideIn {
-            from {
-                opacity: 0;
-                transform: translateY(5px);
-            }
+        .menu-dropdown {
+            display: none;
+            position: absolute;
+            right: 0;
+            top: 100%;
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            min-width: 150px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4);
+            z-index: 50;
+            margin-top: 4px;
+        }
 
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+        .menu-dropdown.show {
+            display: block;
+        }
+
+        .menu-item {
+            padding: 10px 12px;
+            cursor: pointer;
+            transition: background 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .menu-item:hover {
+            background: var(--card-hover);
+        }
+
+        .menu-item i {
+            font-size: 1.1rem;
         }
     </style>
 </head>
@@ -303,14 +625,32 @@
 
     <div id="app">
         <header>
-            <div style="display: flex; align-items: center; gap: 15px;">
-                <h1 id="project-title" contenteditable="true" spellcheck="false">Cargando...</h1>
-                <button id="btn-save" class="btn-save" title="Guardar cambios">
-                    <i class="ri-save-line"></i>
-                    <span>Guardar</span>
-                </button>
-                <span id="save-status" class="save-status">●</span>
+            <div class="header-top">
+                <div class="header-left">
+                    <!-- Project Selector -->
+                    <div class="project-selector">
+                        <button class="project-btn" id="project-btn">
+                            <i class="ri-folder-line"></i>
+                            <span id="current-project-name">Proyecto</span>
+                            <i class="ri-arrow-down-s-line"></i>
+                        </button>
+                        <div class="project-dropdown" id="project-dropdown">
+                            <!-- Populated dynamically -->
+                        </div>
+                    </div>
+
+                    <h1 id="project-title" contenteditable="true" spellcheck="false">Cargando...</h1>
+                </div>
+
+                <div class="header-actions">
+                    <button id="btn-save" class="btn-save" title="Guardar cambios">
+                        <i class="ri-save-line"></i>
+                        <span>Guardar</span>
+                    </button>
+                    <span id="save-status" class="save-status">●</span>
+                </div>
             </div>
+
             <div class="header-stats">
                 <span>Progreso Total</span>
                 <div class="main-progress-container">
@@ -318,13 +658,22 @@
                 </div>
                 <span id="main-progress-text">0%</span>
             </div>
+
+            <!-- Search & Filters -->
+            <div class="search-container">
+                <input type="text" class="search-bar" id="search-bar" placeholder="Buscar tareas...">
+                <button class="filter-btn" id="filter-priority-btn" title="Ordenar por prioridad">
+                    <i class="ri-sort-asc"></i>
+                    <span>Prioridad</span>
+                </button>
+            </div>
         </header>
 
-        <main id="task-container"></main>
+        <div id="task-container"></div>
 
         <footer>
-            <input type="text" id="new-root-task" placeholder="Nueva meta principal (Enter)...">
-            <button id="btn-add-root"><i class="ri-add-line"></i> Agregar</button>
+            <input type="text" id="new-root-task" placeholder="Nueva meta principal (Enter)..." />
+            <button id="btn-add-root"><i class="ri-add-line"></i></button>
         </footer>
     </div>
 
@@ -355,19 +704,22 @@
         try {
             firebase.initializeApp(firebaseConfig);
             db = firebase.firestore();
-            console.log("Firebase Connected");
+            console.log("✅ Firebase initialized");
         } catch (e) {
-            showStatus("Error Critical: " + e.message, "error");
+            showStatus("Error Firebase: " + e.message, "error");
         }
 
-        const PROJECT_ID = "vanilla-project-v1";
+        // --- 3. STATE & DOM ---
+        let projects = {};
+        let activeProjectId = localStorage.getItem('activeProjectId') || 'default-project';
         let projectData = null;
         let debounceTimer;
-        let expandedTasks = new Set(); // Track which tasks are expanded
-        let hasUnsavedChanges = false; // Track if there are unsaved changes
-        let autoSaveTimer = null; // Auto-save timer reference
+        let expandedTasks = new Set();
+        let hasUnsavedChanges = false;
+        let autoSaveTimer = null;
+        let searchQuery = '';
+        let sortByPriority = false;
 
-        // --- 3. DOM ELEMENTS ---
         const taskContainer = document.getElementById('task-container');
         const projectTitle = document.getElementById('project-title');
         const mainProgressBar = document.getElementById('main-progress-bar');
@@ -376,20 +728,22 @@
         const btnAddRoot = document.getElementById('btn-add-root');
         const btnSave = document.getElementById('btn-save');
         const saveStatus = document.getElementById('save-status');
+        const searchBar = document.getElementById('search-bar');
+        const filterPriorityBtn = document.getElementById('filter-priority-btn');
+        const projectBtn = document.getElementById('project-btn');
+        const projectDropdown = document.getElementById('project-dropdown');
+        const currentProjectName = document.getElementById('current-project-name');
 
         // --- 4. SAVE STATE MANAGEMENT ---
-
         function markAsUnsaved() {
             hasUnsavedChanges = true;
             saveStatus.className = 'save-status unsaved';
             saveStatus.title = 'Cambios sin guardar';
-
-            // Reset auto-save timer (60 seconds)
             clearTimeout(autoSaveTimer);
             autoSaveTimer = setTimeout(() => {
-                console.log("⏰ Auto-guardado después de 60s de inactividad");
+                console.log("⏰ Auto-guardado después de 60s");
                 manualSave();
-            }, 60000); // 60 seconds
+            }, 60000);
         }
 
         function markAsSaved() {
@@ -404,7 +758,6 @@
             saveStatus.title = 'Guardando...';
         }
 
-        // Manual save function
         async function manualSave() {
             if (!hasUnsavedChanges || !projectData) {
                 console.log("📌 No hay cambios para guardar");
@@ -415,7 +768,7 @@
             console.log("💾 Guardado manual iniciado");
 
             try {
-                await db.collection("projects").doc(PROJECT_ID).update({
+                await db.collection("projects").doc(activeProjectId).update({
                     tasks: projectData.tasks,
                     title: projectData.title || "Mi Proyecto"
                 });
@@ -425,21 +778,19 @@
             } catch (e) {
                 console.error("❌ Error guardando:", e);
                 showStatus("Error al guardar: " + e.message, "error");
-                markAsUnsaved(); // Restore unsaved state
+                markAsUnsaved();
             }
         }
 
-        // Confirm before leaving if unsaved changes
         window.addEventListener('beforeunload', (e) => {
             if (hasUnsavedChanges) {
                 e.preventDefault();
-                e.returnValue = ''; // Chrome requires this
-                return ''; // Some browsers show this message
+                e.returnValue = '';
+                return '';
             }
         });
 
-        // --- 4. LOGIC ---
-
+        // --- 5. UTILITY FUNCTIONS ---
         function debounce(func, wait) {
             return function (...args) {
                 clearTimeout(debounceTimer);
@@ -447,23 +798,17 @@
             };
         }
 
-        // Calculate progress recursively
-        // Returns: { progress: number, isComplete: boolean }
         function calculateProgress(task) {
             if (!task.subtasks || task.subtasks.length === 0) {
-                // Leaf node: use manual completion status
                 return {
                     progress: task.completed ? 100 : 0,
                     isComplete: task.completed
                 };
             }
 
-            // Parent node: calculate from children
             const childResults = task.subtasks.map(t => calculateProgress(t));
             const totalProgress = childResults.reduce((acc, r) => acc + r.progress, 0);
             const avgProgress = Math.round(totalProgress / task.subtasks.length);
-
-            // Auto-complete: all children must be at 100%
             const allChildrenComplete = childResults.every(r => r.progress === 100);
 
             return {
@@ -472,30 +817,190 @@
             };
         }
 
-        // Recursive Update Helpers
-        function updateTaskRecursive(tasks, targetId, updateFn) {
+        function updateTaskRecursive(tasks, taskId, updateFn) {
             return tasks.map(t => {
-                if (t.id === targetId) return updateFn(t);
-                if (t.subtasks && t.subtasks.length) {
-                    return { ...t, subtasks: updateTaskRecursive(t.subtasks, targetId, updateFn) };
+                if (t.id === taskId) {
+                    return updateFn(t);
+                }
+                if (t.subtasks && t.subtasks.length > 0) {
+                    return {
+                        ...t,
+                        subtasks: updateTaskRecursive(t.subtasks, taskId, updateFn)
+                    };
                 }
                 return t;
             });
         }
 
-        function deleteTaskRecursive(tasks, targetId) {
+        function deleteTaskRecursive(tasks, taskId) {
             return tasks.filter(t => {
-                if (t.id === targetId) return false;
-                if (t.subtasks) t.subtasks = deleteTaskRecursive(t.subtasks, targetId);
+                if (t.id === taskId) return false;
+                if (t.subtasks) {
+                    t.subtasks = deleteTaskRecursive(t.subtasks, taskId);
+                }
                 return true;
             });
         }
 
-        // --- 5. RENDER ---
+        function matchesSearch(task, query) {
+            if (!query) return true;
+            const lowerQuery = query.toLowerCase();
+            if (task.title.toLowerCase().includes(lowerQuery)) return true;
+            if (task.notes && task.notes.toLowerCase().includes(lowerQuery)) return true;
+            if (task.subtasks) {
+                return task.subtasks.some(sub => matchesSearch(sub, query));
+            }
+            return false;
+        }
 
+        const priorityOrder = { high: 0, medium: 1, low: 2 };
+
+        function sortTasksByPriority(tasks) {
+            const sorted = [...tasks].sort((a, b) => {
+                const aPriority = priorityOrder[a.priority || 'medium'];
+                const bPriority = priorityOrder[b.priority || 'medium'];
+                return aPriority - bPriority;
+            });
+
+            return sorted.map(task => ({
+                ...task,
+                subtasks: task.subtasks ? sortTasksByPriority(task.subtasks) : []
+            }));
+        }
+
+        // --- 6. PROJECT MANAGEMENT ---
+        async function loadProjects() {
+            try {
+                const snapshot = await db.collection("projects").get();
+                projects = {};
+                snapshot.forEach(doc => {
+                    projects[doc.id] = doc.data();
+                });
+
+                if (Object.keys(projects).length === 0) {
+                    await createDefaultProject();
+                }
+
+                renderProjectDropdown();
+            } catch (e) {
+                showStatus("Error cargando proyectos: " + e.message, "error");
+            }
+        }
+
+        async function createDefaultProject() {
+            activeProjectId = 'default-project';
+            localStorage.setItem('activeProjectId', activeProjectId);
+            await db.collection("projects").doc(activeProjectId).set({
+                title: "Mi Proyecto",
+                tasks: []
+            });
+            projects[activeProjectId] = {
+                title: "Mi Proyecto",
+                tasks: []
+            };
+        }
+
+        async function createProject() {
+            const title = prompt("Nombre del nuevo proyecto:");
+            if (!title) return;
+
+            const newId = crypto.randomUUID();
+            await db.collection("projects").doc(newId).set({
+                title: title,
+                tasks: []
+            });
+
+            projects[newId] = { title, tasks: [] };
+            switchProject(newId);
+            renderProjectDropdown();
+        }
+
+        async function deleteProject(projectId) {
+            if (Object.keys(projects).length === 1) {
+                alert("No puedes eliminar el último proyecto");
+                return;
+            }
+
+            if (!confirm("¿Eliminar este proyecto?")) return;
+
+            await db.collection("projects").doc(projectId).delete();
+            delete projects[projectId];
+
+            if (activeProjectId === projectId) {
+                activeProjectId = Object.keys(projects)[0];
+                localStorage.setItem('activeProjectId', activeProjectId);
+                loadActiveProject();
+            }
+
+            renderProjectDropdown();
+        }
+
+        async function renameProject(projectId) {
+            const newTitle = prompt("Nuevo nombre:", projects[projectId].title);
+            if (!newTitle || newTitle === projects[projectId].title) return;
+
+            await db.collection("projects").doc(projectId).update({ title: newTitle });
+            projects[projectId].title = newTitle;
+
+            if (projectId === activeProjectId) {
+                projectTitle.textContent = newTitle;
+                currentProjectName.textContent = newTitle;
+            }
+
+            renderProjectDropdown();
+        }
+
+        function switchProject(projectId) {
+            activeProjectId = projectId;
+            localStorage.setItem('activeProjectId', activeProjectId);
+            loadActiveProject();
+            renderProjectDropdown();
+            projectDropdown.classList.remove('show');
+        }
+
+        function renderProjectDropdown() {
+            const items = Object.keys(projects).map(id => {
+                const isActive = id === activeProjectId;
+                return `
+                    <div class="project-item ${isActive ? 'active' : ''}" data-id="${id}" onclick="event.stopPropagation(); switchProject('${id}')">
+                        <span>${projects[id].title}</span>
+                        <div class="project-item-actions" onclick="event.stopPropagation()">
+                            <button onclick="renameProject('${id}')"><i class="ri-edit-line"></i></button>
+                            ${!isActive ? `<button onclick="deleteProject('${id}')"><i class="ri-delete-bin-line"></i></button>` : ''}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            projectDropdown.innerHTML = items + '<div class="project-add" onclick="event.stopPropagation(); createProject()"><i class="ri-add-line"></i> Nuevo Proyecto</div>';
+            currentProjectName.textContent = projects[activeProjectId]?.title || 'Proyecto';
+        }
+
+        projectBtn.onclick = (e) => {
+            e.stopPropagation();
+            projectDropdown.classList.toggle('show');
+        };
+
+        document.addEventListener('click', () => {
+            projectDropdown.classList.remove('show');
+        });
+
+        // --- 7. RENDERING ---
         function render() {
             if (!projectData) return;
             taskContainer.innerHTML = '';
+
+            let tasksToRender = projectData.tasks;
+
+            // Apply search filter
+            if (searchQuery) {
+                tasksToRender = tasksToRender.filter(t => matchesSearch(t, searchQuery));
+            }
+
+            // Apply priority sorting
+            if (sortByPriority) {
+                tasksToRender = sortTasksByPriority(tasksToRender);
+            }
 
             // Global Stats
             if (projectData.tasks.length > 0) {
@@ -508,7 +1013,7 @@
                 mainProgressText.textContent = '0%';
             }
 
-            projectData.tasks.forEach(task => {
+            tasksToRender.forEach(task => {
                 taskContainer.appendChild(createTaskEl(task));
             });
         }
@@ -521,22 +1026,46 @@
             const progress = result.progress;
             const isComplete = result.isComplete;
 
+            const priority = task.priority || 'medium';
+            const priorityLabels = { high: 'Alta', medium: 'Media', low: 'Baja' };
+            const priorityIcons = { high: '🔴', medium: '🔵', low: '🟡' };
+
             const el = document.createElement('div');
             el.className = 'task-item';
 
             el.innerHTML = `
-                <div class="task-content ${isComplete ? 'completed' : ''}">
+                <div class="task-content ${isComplete ? 'completed' : ''}" style="border-left-color: var(--priority-${priority})">
                     <button class="btn-toggle ${!hasSub ? 'hidden' : ''}"><i class="ri-arrow-right-s-line"></i></button>
                     <button class="btn-check ${isComplete ? 'checked' : ''} ${!isLeaf ? 'disabled' : ''}">
                         <i class="ri-check-line"></i>
                     </button>
+                    <span class="priority-badge priority-${priority}" data-task-id="${task.id}">
+                        ${priorityIcons[priority]} ${priorityLabels[priority]}
+                    </span>
                     <span class="task-title" contenteditable="true" spellcheck="false">${task.title}</span>
                     ${!isLeaf ? `<span style="font-size:0.8rem; color:#64748b; font-weight:bold;">${progress}%</span>` : ''}
                     <div class="task-actions">
-                        <button class="add-sub"><i class="ri-add-line"></i></button>
-                        <button class="del-task"><i class="ri-delete-bin-line"></i></button>
+                        ${task.notes ? '<button class="btn-notes has-notes" title="Ver notas"><i class="ri-sticky-note-fill"></i></button>' : ''}
+                        <div class="task-menu">
+                            <button class="btn-menu"><i class="ri-more-2-fill"></i></button>
+                            <div class="menu-dropdown">
+                                <div class="menu-item" data-action="notes">
+                                    <i class="ri-sticky-note-line"></i>
+                                    <span>${task.notes ? 'Editar nota' : 'Agregar nota'}</span>
+                                </div>
+                                <div class="menu-item" data-action="addSub">
+                                    <i class="ri-add-line"></i>
+                                    <span>Agregar subtarea</span>
+                                </div>
+                                <div class="menu-item" data-action="delete">
+                                    <i class="ri-delete-bin-line"></i>
+                                    <span>Eliminar</span>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
+                ${task.notes ? `<div class="task-notes"><textarea placeholder="Notas...">${task.notes}</textarea></div>` : '<div class="task-notes"><textarea placeholder="Notas..."></textarea></div>'}
                 <div class="subtasks-container"></div>
             `;
 
@@ -544,15 +1073,14 @@
             if (hasSub) {
                 task.subtasks.forEach(sub => subContainer.appendChild(createTaskEl(sub)));
 
-                // Restore expanded state if it was open before
                 if (expandedTasks.has(task.id)) {
                     subContainer.classList.add('open');
-                    btnToggle.classList.add('expanded');
-                    btnToggle.querySelector('i').className = 'ri-arrow-down-s-line';
+                    el.querySelector('.btn-toggle').classList.add('expanded');
+                    el.querySelector('.btn-toggle i').className = 'ri-arrow-down-s-line';
                 }
             }
 
-            // Events
+            // Toggle subtasks
             const btnToggle = el.querySelector('.btn-toggle');
             if (hasSub) {
                 btnToggle.onclick = () => {
@@ -560,7 +1088,6 @@
                     btnToggle.classList.toggle('expanded');
                     btnToggle.querySelector('i').className = isOpen ? 'ri-arrow-down-s-line' : 'ri-arrow-right-s-line';
 
-                    // Save state
                     if (isOpen) {
                         expandedTasks.add(task.id);
                     } else {
@@ -569,37 +1096,77 @@
                 };
             }
 
-            el.querySelector('.add-sub').onclick = () => {
-                const title = prompt("Subtarea:");
-                if (title) save(tasks => updateTaskRecursive(tasks, task.id, t => ({
-                    ...t, subtasks: [...(t.subtasks || []), { id: crypto.randomUUID(), title, completed: false, subtasks: [] }]
-                })));
+            // Priority cycling
+            const priorityBadge = el.querySelector('.priority-badge');
+            priorityBadge.onclick = () => {
+                const priorities = ['low', 'medium', 'high'];
+                const currentIndex = priorities.indexOf(priority);
+                const nextPriority = priorities[(currentIndex + 1) % 3];
+                save(tasks => updateTaskRecursive(tasks, task.id, t => ({ ...t, priority: nextPriority })));
             };
 
-            el.querySelector('.del-task').onclick = () => {
-                if (confirm("Eliminar?")) save(tasks => deleteTaskRecursive(tasks, task.id));
-            };
-
-            // Only allow manual completion for leaf nodes
+            // Completion toggle (leaf only)
             if (isLeaf) {
                 el.querySelector('.btn-check').onclick = () => {
                     save(tasks => updateTaskRecursive(tasks, task.id, t => ({ ...t, completed: !t.completed })));
                 };
             }
 
+            // Title editing
             const titleSpan = el.querySelector('.task-title');
             titleSpan.oninput = debounce(() => {
                 const val = titleSpan.innerText;
                 if (val !== task.title) save(tasks => updateTaskRecursive(tasks, task.id, t => ({ ...t, title: val })), true);
-            }, 1500); // Increased debounce to 1.5s
+            }, 1500);
+
+            // Notes section
+            const notesSection = el.querySelector('.task-notes');
+            const notesTextarea = notesSection.querySelector('textarea');
+
+            notesTextarea.onblur = debounce(() => {
+                const val = notesTextarea.value.trim();
+                save(tasks => updateTaskRecursive(tasks, task.id, t => ({ ...t, notes: val })), true);
+            }, 500);
+
+            // Menu dropdown
+            const btnMenu = el.querySelector('.btn-menu');
+            const menuDropdown = el.querySelector('.menu-dropdown');
+
+            btnMenu.onclick = (e) => {
+                e.stopPropagation();
+                menuDropdown.classList.toggle('show');
+            };
+
+            document.addEventListener('click', () => {
+                menuDropdown.classList.remove('show');
+            });
+
+            menuDropdown.onclick = (e) => {
+                e.stopPropagation();
+                const action = e.target.closest('.menu-item')?.dataset.action;
+
+                if (action === 'notes') {
+                    notesSection.classList.toggle('show');
+                    if (notesSection.classList.contains('show')) {
+                        notesTextarea.focus();
+                    }
+                } else if (action === 'addSub') {
+                    const title = prompt("Subtarea:");
+                    if (title) save(tasks => updateTaskRecursive(tasks, task.id, t => ({
+                        ...t, subtasks: [...(t.subtasks || []), { id: crypto.randomUUID(), title, completed: false, subtasks: [], priority: 'medium', notes: '' }]
+                    })));
+                } else if (action === 'delete') {
+                    if (confirm("¿Eliminar?")) save(tasks => deleteTaskRecursive(tasks, task.id));
+                }
+
+                menuDropdown.classList.remove('show');
+            };
 
             return el;
         }
 
-        // --- 6. DATA SYNC ---
-
+        // --- 8. DATA PERSISTENCE ---
         function save(updaterFn, silent = false) {
-            console.log("💾 save() llamado (solo local)");
             const newTasks = updaterFn(projectData.tasks);
             projectData.tasks = newTasks;
 
@@ -607,60 +1174,73 @@
                 render();
             }
 
-            markAsUnsaved(); // Mark that we have unsaved changes
+            markAsUnsaved();
         }
 
-        showStatus("Conectando...", "info");
-        db.collection("projects").doc(PROJECT_ID).onSnapshot(doc => {
-            if (doc.exists) {
-                const data = doc.data();
-                projectData = data;
-                if (document.activeElement !== projectTitle) projectTitle.textContent = data.title;
-                render();
-                markAsSaved(); // Data loaded from Firebase is already saved
-                showStatus("Sincronizado", "success");
-            } else {
-                showStatus("Creando proyecto...", "info");
-                db.collection("projects").doc(PROJECT_ID).set({
-                    title: "Mi Proyecto",
-                    tasks: [{ id: "1", title: "Ejemplo: Presiona Enter", completed: false, subtasks: [] }]
-                });
-            }
-        }, err => {
-            showStatus("Error Conexión: " + err.message, "error");
-        });
+        function loadActiveProject() {
+            showStatus("Conectando...", "info");
+            db.collection("projects").doc(activeProjectId).onSnapshot(doc => {
+                if (doc.exists) {
+                    const data = doc.data();
+                    projectData = data;
+                    if (document.activeElement !== projectTitle) projectTitle.textContent = data.title;
+                    render();
+                    markAsSaved();
+                    showStatus("Sincronizado", "success");
+                } else {
+                    showStatus("Creando proyecto...", "info");
+                    db.collection("projects").doc(activeProjectId).set({
+                        title: "Mi Proyecto",
+                        tasks: []
+                    });
+                }
+            }, err => {
+                showStatus("Error Conexión: " + err.message, "error");
+            });
+        }
 
-        // Global Events
+        // --- 9. EVENTS ---
+        btnSave.onclick = () => manualSave();
+
         const addRoot = () => {
-            console.log("▶ addRoot() llamado");
-            console.log("  - inputRoot:", inputRoot);
-            console.log("  - inputRoot.value:", inputRoot.value);
             const val = inputRoot.value.trim();
-            console.log("  - val después de trim:", val);
             if (val) {
-                console.log("  ✓ Valor válido, llamando save()...");
-                save(tasks => [...tasks, { id: crypto.randomUUID(), title: val, completed: false, subtasks: [] }]);
+                save(tasks => [...tasks, { id: crypto.randomUUID(), title: val, completed: false, subtasks: [], priority: 'medium', notes: '' }]);
                 inputRoot.value = '';
-                console.log("  ✓ Input limpiado");
-            } else {
-                console.log("  ✗ Valor vacío, no se guardará");
             }
         };
-        console.log("🔌 Conectando eventos...");
-        console.log("  - btnAddRoot:", btnAddRoot);
-        console.log("  - inputRoot:", inputRoot);
+
         btnAddRoot.onclick = addRoot;
         inputRoot.onkeydown = (e) => {
-            console.log("  ⌨ Tecla presionada:", e.key);
             if (e.key === 'Enter') {
-                console.log("  ↪ Enter detectado, llamando addRoot()");
                 addRoot();
             }
         };
 
         projectTitle.oninput = debounce(() => {
-            db.collection("projects").doc(PROJECT_ID).update({ title: projectTitle.innerText });
+            const newTitle = projectTitle.innerText.trim();
+            if (projectData) {
+                projectData.title = newTitle;
+                markAsUnsaved();
+            }
         }, 800);
+
+        searchBar.oninput = debounce(() => {
+            searchQuery = searchBar.value.trim();
+            render();
+        }, 300);
+
+        filterPriorityBtn.onclick = () => {
+            sortByPriority = !sortByPriority;
+            filterPriorityBtn.classList.toggle('active', sortByPriority);
+            render();
+        };
+
+        // --- 10. INIT ---
+        (async () => {
+            await loadProjects();
+            loadActiveProject();
+        })();
 
     </script>
 </body>
