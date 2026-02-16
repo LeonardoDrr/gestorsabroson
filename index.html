@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestor de Avance - Final</title>
+    <!-- Fonts & Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+
+    <!-- Styles -->
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --card-bg: #1e293b;
+            --card-hover: #334155;
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --accent-color: #3b82f6;
+            --accent-hover: #2563eb;
+            --danger-color: #ef4444;
+            --success-color: #22c55e;
+            --border-color: #334155;
+            --font-family: 'Inter', sans-serif;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            font-family: var(--font-family);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            overflow-x: hidden;
+            padding: 20px;
+        }
+
+        #app {
+            width: 100%;
+            max-width: 800px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            opacity: 0;
+            animation: fadeIn 0.5s forwards;
+        }
+
+        /* Status Bar */
+        #status-message {
+            padding: 12px;
+            border-radius: 8px;
+            text-align: center;
+            font-weight: 600;
+            display: none;
+        }
+
+        #status-message.error {
+            display: block;
+            background: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #f87171;
+        }
+
+        #status-message.success {
+            display: block;
+            background: #dcfce7;
+            color: #166534;
+            border: 1px solid #4ade80;
+        }
+
+        #status-message.info {
+            display: block;
+            background: #e0f2fe;
+            color: #075985;
+            border: 1px solid #38bdf8;
+        }
+
+        /* Header */
+        h1#project-title {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 15px;
+            background: linear-gradient(to right, #60a5fa, #34d399);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            border-bottom: 2px solid transparent;
+        }
+
+        h1#project-title:focus {
+            border-bottom-color: var(--accent-color);
+            outline: none;
+        }
+
+        .header-stats {
+            background: var(--card-bg);
+            padding: 15px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            border: 1px solid var(--border-color);
+        }
+
+        .main-progress-container {
+            flex: 1;
+            height: 12px;
+            background: #0f172a;
+            border-radius: 6px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: var(--accent-color);
+            transition: width 0.5s ease;
+        }
+
+        #main-progress-text {
+            color: var(--accent-color);
+            font-weight: bold;
+            font-family: monospace;
+        }
+
+        /* Tasks */
+        .task-item {
+            margin-bottom: 10px;
+            animation: slideIn 0.3s ease;
+        }
+
+        .task-content {
+            background: var(--card-bg);
+            padding: 12px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border: 1px solid transparent;
+            transition: all 0.2s;
+        }
+
+        .task-content:hover {
+            border-color: var(--border-color);
+            background: var(--card-hover);
+        }
+
+        .task-content.completed .task-title {
+            text-decoration: line-through;
+            color: var(--text-secondary);
+        }
+
+        .task-title {
+            flex: 1;
+            outline: none;
+            padding: 4px;
+            border-radius: 4px;
+        }
+
+        .task-title:focus {
+            background: rgba(0, 0, 0, 0.2);
+        }
+
+        /* Buttons */
+        button {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: var(--text-secondary);
+            transition: color 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        button:hover {
+            color: var(--text-primary);
+        }
+
+        .btn-check {
+            width: 24px;
+            height: 24px;
+            border: 2px solid var(--text-secondary);
+            border-radius: 50%;
+            color: transparent;
+        }
+
+        .btn-check:hover {
+            border-color: var(--text-primary);
+        }
+
+        .btn-check.checked {
+            background: var(--success-color);
+            border-color: var(--success-color);
+            color: white;
+        }
+
+        .btn-check.disabled {
+            opacity: 0.3;
+            cursor: default;
+        }
+
+        .btn-toggle i {
+            transition: transform 0.2s;
+        }
+
+        .btn-toggle.expanded i {
+            transform: rotate(90deg);
+        }
+
+        .btn-toggle.hidden {
+            visibility: hidden;
+        }
+
+        .task-actions {
+            opacity: 0;
+            display: flex;
+            gap: 8px;
+        }
+
+        .task-content:hover .task-actions {
+            opacity: 1;
+        }
+
+        /* Subtasks */
+        .subtasks-container {
+            margin-left: 28px;
+            padding-left: 10px;
+            border-left: 2px solid var(--border-color);
+            margin-top: 8px;
+            display: none;
+        }
+
+        .subtasks-container.open {
+            display: block;
+        }
+
+        /* Footer */
+        footer {
+            margin-top: auto;
+            display: flex;
+            gap: 10px;
+        }
+
+        input {
+            flex: 1;
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            background: var(--card-bg);
+            color: white;
+            outline: none;
+        }
+
+        input:focus {
+            border-color: var(--accent-color);
+        }
+
+        #btn-add-root {
+            background: var(--accent-color);
+            color: white;
+            padding: 0 20px;
+            border-radius: 8px;
+            font-weight: 600;
+        }
+
+        #btn-add-root:hover {
+            background: var(--accent-hover);
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(5px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="status-message">Cargando sistema...</div>
+
+    <div id="app">
+        <header>
+            <h1 id="project-title" contenteditable="true" spellcheck="false">Cargando...</h1>
+            <div class="header-stats">
+                <span>Progreso Total</span>
+                <div class="main-progress-container">
+                    <div id="main-progress-bar" class="progress-fill" style="width: 0%"></div>
+                </div>
+                <span id="main-progress-text">0%</span>
+            </div>
+        </header>
+
+        <main id="task-container"></main>
+
+        <footer>
+            <input type="text" id="new-root-task" placeholder="Nueva meta principal (Enter)...">
+            <button id="btn-add-root"><i class="ri-add-line"></i> Agregar</button>
+        </footer>
+    </div>
+
+    <!-- Firebase Compat SDKs (Global Namespace) -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+
+    <script>
+        // --- 1. CONFIGURATION ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyCKpkREkmXuuMKSrHIjMnWXcZRlNRhTCY4",
+            authDomain: "gestor-de-tareas-d8b35.firebaseapp.com",
+            projectId: "gestor-de-tareas-d8b35",
+            storageBucket: "gestor-de-tareas-d8b35.firebasestorage.app",
+            messagingSenderId: "736697027471",
+            appId: "1:736697027471:web:ba03c48a2c5b6386d059fa"
+        };
+
+        // --- 2. INITIALIZATION ---
+        const statusMsg = document.getElementById('status-message');
+        function showStatus(msg, type) {
+            statusMsg.textContent = msg;
+            statusMsg.className = type;
+            if (type === 'success') setTimeout(() => statusMsg.style.display = 'none', 3000);
+        }
+
+        let db;
+        try {
+            firebase.initializeApp(firebaseConfig);
+            db = firebase.firestore();
+            console.log("Firebase Connected");
+        } catch (e) {
+            showStatus("Error Critical: " + e.message, "error");
+        }
+
+        const PROJECT_ID = "vanilla-project-v1";
+        let projectData = null;
+        let debounceTimer;
+
+        // --- 3. DOM ELEMENTS ---
+        const taskContainer = document.getElementById('task-container');
+        const projectTitle = document.getElementById('project-title');
+        const mainProgressBar = document.getElementById('main-progress-bar');
+        const mainProgressText = document.getElementById('main-progress-text');
+        const inputRoot = document.getElementById('new-root-task');
+        const btnAddRoot = document.getElementById('btn-add-root');
+
+        // --- 4. LOGIC ---
+
+        function debounce(func, wait) {
+            return function (...args) {
+                clearTimeout(debounceTimer);
+                debounceTimer = setTimeout(() => func.apply(this, args), wait);
+            };
+        }
+
+        function calculateProgress(task) {
+            if (!task.subtasks || task.subtasks.length === 0) return task.completed ? 100 : 0;
+            const total = task.subtasks.reduce((acc, t) => acc + calculateProgress(t), 0);
+            return Math.round(total / task.subtasks.length);
+        }
+
+        // Recursive Update Helpers
+        function updateTaskRecursive(tasks, targetId, updateFn) {
+            return tasks.map(t => {
+                if (t.id === targetId) return updateFn(t);
+                if (t.subtasks && t.subtasks.length) {
+                    return { ...t, subtasks: updateTaskRecursive(t.subtasks, targetId, updateFn) };
+                }
+                return t;
+            });
+        }
+
+        function deleteTaskRecursive(tasks, targetId) {
+            return tasks.filter(t => {
+                if (t.id === targetId) return false;
+                if (t.subtasks) t.subtasks = deleteTaskRecursive(t.subtasks, targetId);
+                return true;
+            });
+        }
+
+        // --- 5. RENDER ---
+
+        function render() {
+            if (!projectData) return;
+            taskContainer.innerHTML = '';
+
+            // Global Stats
+            const total = projectData.tasks.length > 0
+                ? Math.round(projectData.tasks.reduce((a, t) => a + calculateProgress(t), 0) / projectData.tasks.length)
+                : 0;
+            mainProgressBar.style.width = total + '%';
+            mainProgressText.textContent = total + '%';
+
+            projectData.tasks.forEach(task => {
+                taskContainer.appendChild(createTaskEl(task));
+            });
+        }
+
+        function createTaskEl(task) {
+            const hasSub = task.subtasks && task.subtasks.length > 0;
+            const isLeaf = !hasSub;
+            const progress = calculateProgress(task);
+
+            const el = document.createElement('div');
+            el.className = 'task-item';
+
+            el.innerHTML = `
+                <div class="task-content ${task.completed && isLeaf ? 'completed' : ''}">
+                    <button class="btn-toggle ${!hasSub ? 'hidden' : ''}"><i class="ri-arrow-right-s-line"></i></button>
+                    <button class="btn-check ${task.completed && isLeaf ? 'checked' : ''} ${!isLeaf ? 'disabled' : ''}">
+                        <i class="ri-check-line"></i>
+                    </button>
+                    <span class="task-title" contenteditable="true" spellcheck="false">${task.title}</span>
+                    ${!isLeaf ? `<span style="font-size:0.8rem; color:#64748b; font-weight:bold;">${progress}%</span>` : ''}
+                    <div class="task-actions">
+                        <button class="add-sub"><i class="ri-add-line"></i></button>
+                        <button class="del-task"><i class="ri-delete-bin-line"></i></button>
+                    </div>
+                </div>
+                <div class="subtasks-container"></div>
+            `;
+
+            const subContainer = el.querySelector('.subtasks-container');
+            if (hasSub) {
+                task.subtasks.forEach(sub => subContainer.appendChild(createTaskEl(sub)));
+            }
+
+            // Events
+            const btnToggle = el.querySelector('.btn-toggle');
+            if (hasSub) {
+                btnToggle.onclick = () => {
+                    subContainer.classList.toggle('open');
+                    btnToggle.classList.toggle('expanded');
+                    btnToggle.querySelector('i').className = subContainer.classList.contains('open') ? 'ri-arrow-down-s-line' : 'ri-arrow-right-s-line';
+                };
+            }
+
+            el.querySelector('.add-sub').onclick = () => {
+                const title = prompt("Subtarea:");
+                if (title) save(tasks => updateTaskRecursive(tasks, task.id, t => ({
+                    ...t, subtasks: [...(t.subtasks || []), { id: crypto.randomUUID(), title, completed: false, subtasks: [] }]
+                })));
+            };
+
+            el.querySelector('.del-task').onclick = () => {
+                if (confirm("Eliminar?")) save(tasks => deleteTaskRecursive(tasks, task.id));
+            };
+
+            if (isLeaf) {
+                el.querySelector('.btn-check').onclick = () => {
+                    save(tasks => updateTaskRecursive(tasks, task.id, t => ({ ...t, completed: !t.completed })));
+                };
+            }
+
+            const titleSpan = el.querySelector('.task-title');
+            titleSpan.oninput = debounce(() => {
+                const val = titleSpan.innerText;
+                if (val !== task.title) save(tasks => updateTaskRecursive(tasks, task.id, t => ({ ...t, title: val })), true);
+            }, 500);
+
+            return el;
+        }
+
+        // --- 6. DATA SYNC ---
+
+        function save(updaterFn, silent = false) {
+            console.log("💾 save() llamado");
+            console.log("  - projectData:", projectData);
+            console.log("  - projectData.tasks antes:", projectData.tasks);
+            const newTasks = updaterFn(projectData.tasks);
+            console.log("  - newTasks después:", newTasks);
+            if (!silent) {
+                projectData.tasks = newTasks;
+                console.log("  ✓ Estado local actualizado");
+                render();
+                console.log("  ✓ UI re-renderizada");
+            }
+            console.log("  📤 Intentando guardar en Firebase...");
+            db.collection("projects").doc(PROJECT_ID).update({ tasks: newTasks })
+                .then(() => {
+                    console.log("  ✅ Guardado exitoso en Firebase");
+                })
+                .catch(e => {
+                    console.error("  ❌ Error guardando en Firebase:", e);
+                    showStatus("Error guardando: " + e.message, "error");
+                });
+        }
+
+        showStatus("Conectando...", "info");
+        db.collection("projects").doc(PROJECT_ID).onSnapshot(doc => {
+            if (doc.exists) {
+                const data = doc.data();
+                projectData = data;
+                if (document.activeElement !== projectTitle) projectTitle.textContent = data.title;
+                render();
+                showStatus("Sincronizado", "success");
+            } else {
+                showStatus("Creando proyecto...", "info");
+                db.collection("projects").doc(PROJECT_ID).set({
+                    title: "Mi Proyecto",
+                    tasks: [{ id: "1", title: "Ejemplo: Presiona Enter", completed: false, subtasks: [] }]
+                });
+            }
+        }, err => {
+            showStatus("Error Conexión: " + err.message, "error");
+        });
+
+        // Global Events
+        const addRoot = () => {
+            console.log("▶ addRoot() llamado");
+            console.log("  - inputRoot:", inputRoot);
+            console.log("  - inputRoot.value:", inputRoot.value);
+            const val = inputRoot.value.trim();
+            console.log("  - val después de trim:", val);
+            if (val) {
+                console.log("  ✓ Valor válido, llamando save()...");
+                save(tasks => [...tasks, { id: crypto.randomUUID(), title: val, completed: false, subtasks: [] }]);
+                inputRoot.value = '';
+                console.log("  ✓ Input limpiado");
+            } else {
+                console.log("  ✗ Valor vacío, no se guardará");
+            }
+        };
+        console.log("🔌 Conectando eventos...");
+        console.log("  - btnAddRoot:", btnAddRoot);
+        console.log("  - inputRoot:", inputRoot);
+        btnAddRoot.onclick = addRoot;
+        inputRoot.onkeydown = (e) => {
+            console.log("  ⌨ Tecla presionada:", e.key);
+            if (e.key === 'Enter') {
+                console.log("  ↪ Enter detectado, llamando addRoot()");
+                addRoot();
+            }
+        };
+
+        projectTitle.oninput = debounce(() => {
+            db.collection("projects").doc(PROJECT_ID).update({ title: projectTitle.innerText });
+        }, 800);
+
+    </script>
+</body>
+
+</html>
