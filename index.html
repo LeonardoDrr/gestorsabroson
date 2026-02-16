@@ -374,10 +374,29 @@
             };
         }
 
+        // Calculate progress recursively
+        // Returns: { progress: number, isComplete: boolean }
         function calculateProgress(task) {
-            if (!task.subtasks || task.subtasks.length === 0) return task.completed ? 100 : 0;
-            const total = task.subtasks.reduce((acc, t) => acc + calculateProgress(t), 0);
-            return Math.round(total / task.subtasks.length);
+            if (!task.subtasks || task.subtasks.length === 0) {
+                // Leaf node: use manual completion status
+                return {
+                    progress: task.completed ? 100 : 0,
+                    isComplete: task.completed
+                };
+            }
+
+            // Parent node: calculate from children
+            const childResults = task.subtasks.map(t => calculateProgress(t));
+            const totalProgress = childResults.reduce((acc, r) => acc + r.progress, 0);
+            const avgProgress = Math.round(totalProgress / task.subtasks.length);
+
+            // Auto-complete: all children must be at 100%
+            const allChildrenComplete = childResults.every(r => r.progress === 100);
+
+            return {
+                progress: avgProgress,
+                isComplete: allChildrenComplete
+            };
         }
 
         // Recursive Update Helpers
@@ -406,11 +425,15 @@
             taskContainer.innerHTML = '';
 
             // Global Stats
-            const total = projectData.tasks.length > 0
-                ? Math.round(projectData.tasks.reduce((a, t) => a + calculateProgress(t), 0) / projectData.tasks.length)
-                : 0;
-            mainProgressBar.style.width = total + '%';
-            mainProgressText.textContent = total + '%';
+            if (projectData.tasks.length > 0) {
+                const taskResults = projectData.tasks.map(t => calculateProgress(t));
+                const total = Math.round(taskResults.reduce((a, r) => a + r.progress, 0) / projectData.tasks.length);
+                mainProgressBar.style.width = total + '%';
+                mainProgressText.textContent = total + '%';
+            } else {
+                mainProgressBar.style.width = '0%';
+                mainProgressText.textContent = '0%';
+            }
 
             projectData.tasks.forEach(task => {
                 taskContainer.appendChild(createTaskEl(task));
@@ -420,15 +443,18 @@
         function createTaskEl(task) {
             const hasSub = task.subtasks && task.subtasks.length > 0;
             const isLeaf = !hasSub;
-            const progress = calculateProgress(task);
+
+            const result = calculateProgress(task);
+            const progress = result.progress;
+            const isComplete = result.isComplete;
 
             const el = document.createElement('div');
             el.className = 'task-item';
 
             el.innerHTML = `
-                <div class="task-content ${task.completed && isLeaf ? 'completed' : ''}">
+                <div class="task-content ${isComplete ? 'completed' : ''}">
                     <button class="btn-toggle ${!hasSub ? 'hidden' : ''}"><i class="ri-arrow-right-s-line"></i></button>
-                    <button class="btn-check ${task.completed && isLeaf ? 'checked' : ''} ${!isLeaf ? 'disabled' : ''}">
+                    <button class="btn-check ${isComplete ? 'checked' : ''} ${!isLeaf ? 'disabled' : ''}">
                         <i class="ri-check-line"></i>
                     </button>
                     <span class="task-title" contenteditable="true" spellcheck="false">${task.title}</span>
@@ -467,6 +493,7 @@
                 if (confirm("Eliminar?")) save(tasks => deleteTaskRecursive(tasks, task.id));
             };
 
+            // Only allow manual completion for leaf nodes
             if (isLeaf) {
                 el.querySelector('.btn-check').onclick = () => {
                     save(tasks => updateTaskRecursive(tasks, task.id, t => ({ ...t, completed: !t.completed })));
@@ -481,6 +508,7 @@
 
             return el;
         }
+    }
 
         // --- 6. DATA SYNC ---
 
